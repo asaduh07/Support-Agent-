@@ -1,0 +1,14 @@
+# Transcript 03_chunk_index  (MOCK_LLM=1)
+
+Collection ola_kb_fixed (fixed chunking): 40 chunks upserted, 40 in collection
+Collection ola_kb_sentence (sentence chunking): 60 chunks upserted, 60 in collection
+
+Sample query on 'fixed': How long does Ola take to refund a wrong fare?
+  0.9016  [04_refund_compensation]  ' estimated fare. Refunds go back to the original payment method within 5 to 7 business days, or instantly to Ola Money if the rider chooses it. Goodwill compensation is capped at 200 rupees per ticket'
+  0.8581  [11_outage_communication]  'r 10 minutes or longer. Within 30 minutes of declaring an outage, a banner is shown in the app and a status update is posted on official Ola channels. Updates are repeated every 60 minutes until the s'
+  0.8551  [04_refund_compensation]  'harged a cancellation fee. Overcharges caused by route deviation or wrong fare calculation are refunded for the difference between the charged and the estimated fare. Refunds go back to the original p'
+
+Sample query on 'sentence': How long does Ola take to refund a wrong fare?
+  0.9038  [04_refund_compensation]  'Refunds go back to the original payment method within 5 to 7 business days, or instantly to Ola Money if the rider chooses it.'
+  0.8690  [04_refund_compensation]  'Overcharges caused by route deviation or wrong fare calculation are refunded for the difference between the charged and the estimated fare.'
+  0.8560  [08_service_credit]  'Service credits are Ola Money credits issued when Ola fails to meet a promised service level, such as a breached SLA or a ride cancelled because of a platform error.'

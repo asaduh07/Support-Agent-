@@ -1,0 +1,2 @@
+# Customer Communication Channel Policy
+Support is offered through in-app chat, email, and a callback service requested from the app. In-app chat is the primary channel and every reply on it must reference the ticket ID. Callbacks are only offered for P1 and P2 tickets, and agents must never ask a customer to share an OTP, a full card number, or a password on any channel. All customer messages must be sent from official Ola channels and never from an agent's personal phone or account.

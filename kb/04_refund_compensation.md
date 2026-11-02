@@ -1,0 +1,2 @@
+# Refund and Compensation Policy
+Riders are refunded in full when a trip was charged but never started, or when a driver cancelled after the rider was charged a cancellation fee. Overcharges caused by route deviation or wrong fare calculation are refunded for the difference between the charged and the estimated fare. Refunds go back to the original payment method within 5 to 7 business days, or instantly to Ola Money if the rider chooses it. Goodwill compensation is capped at 200 rupees per ticket unless a Tier 3 manager approves more.

@@ -7,7 +7,7 @@ The order follows dependencies, so later phases use earlier ones as fixed inputs
 - [x] `.venv` on Python 3.10 (CrewAI requires <3.14)
 - [x] git repo on branch `main`, `.gitignore`, `.env.example` (MOCK_LLM, telemetry, GEMINI_API_KEY)
 - [ ] Dependencies get installed per phase as needed and pinned into `requirements.txt` as we go
-- [ ] Download the embedding model once: `intfloat/e5-small-v2` (E5)
+- [x] Download the embedding model once: `intfloat/e5-small-v2` (E5)
 - [ ] Optional Gemini path behind `MOCK_LLM=0` (key provided by the user)
 
 ## Phase 1: Dataset & RAG core (Part 1, 30 marks)
@@ -22,7 +22,7 @@ The order follows dependencies, so later phases use earlier ones as fixed inputs
 
 ## Phase 2: Crew, tools, memory, guardrails (Part 2, 30 marks)
 6. `tools.py`: `check_support_ticket_status` + escalation formula and data-justified threshold. **[T6]**
-7. `mock_llm.py`: CrewAI `MockLLM(BaseLLM)`. Unit-check both pitfalls (template "Observation:",
+7. `llm.py`: CrewAI `MockLLM(BaseLLM)`. Unit-check both pitfalls (template "Observation:",
    name-based dispatch). **The riskiest piece, so it gets built and verified first in this phase.**
 8. `crew.py`: Retrieval / Lookup / Composer agents, `.kickoff()` demo with both tools invoked. **[T7]**
 9. `CrewResponse` Pydantic schema + validation of every response. **[T9]**
@@ -44,9 +44,9 @@ The order follows dependencies, so later phases use earlier ones as fixed inputs
 17. Query cache + call-counter before/after demo. **[T16]**
 
 ## Phase 5: Wrap-up
-- `run_demos.py` regenerates all transcripts from scratch
+- `demos.py` regenerates all transcripts from scratch
 - Fill every `TBD` in the README with the real measured numbers
-- Clean-run check: fresh venv, no network/API keys, `run_demos.py` passes
+- Clean-run check: fresh venv, no network/API keys, `demos.py` passes
 - Push to a public GitHub repo (only when you say so)
 
 ## Risks

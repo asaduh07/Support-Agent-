@@ -1,0 +1,17 @@
+# Transcript 01_dataset  (MOCK_LLM=1)
+
+Seed=42  records=50
+Count per category:
+  Billing          18
+  Technical Issue  10
+  Account Access   7
+  Product Defect   3
+  General Inquiry  12
+Count per status:
+  Open             12
+  In Progress      7
+  Escalated        5
+  Resolved         13
+  Closed           13
+Escalated=True: 12/50 = 24.0%
+All Task 1 thresholds met.

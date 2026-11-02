@@ -30,7 +30,7 @@ pipeline.answer(session_id, query)
 | `dataset.py` | Seeded generator → `SUPPORT_TICKETS`; prints stats | 1 |
 | `kb/*.md` | 12+ policy documents, one per required topic | 2 |
 | `rag.py` | Fixed-size+overlap and sentence chunkers, E5 embeddings (`intfloat/e5-small-v2`, `query:`/`passage:` prefixes), two Chroma collections, retrieve, grounded generate, threshold, query cache | 3, 4, 16 |
-| `mock_llm.py` | Deterministic `MockLLM(BaseLLM)` for CrewAI, mock Autogen `ChatCompletionClient`, mock judge | all LLM calls |
+| `llm.py` | Deterministic `MockLLM(BaseLLM)` for CrewAI, mock Autogen `ChatCompletionClient`, mock judge | all LLM calls |
 | `tools.py` | `rag_lookup`, `check_support_ticket_status` + `escalation_score` | 6 |
 | `crew.py` | 3 agents, tasks, `CrewResponse` schema, least-autonomy guard | 7, 9, 15 |
 | `guardrails.py` | Phone masking, injection detection, groundedness check | 10, 12 |
@@ -38,13 +38,13 @@ pipeline.answer(session_id, query)
 | `pipeline.py` | Glues it together: memory, budget cap, guardrails, crew, review | 8, 15 |
 | `app.py` | FastAPI: `POST /ask`, `POST /add-document`, `WS /chat`; JSONL logging | 11, 12 |
 | `evaluate.py` | Chunking P/R (T5) and 15-query LLM-as-judge eval (T13) | 5, 13 |
-| `run_demos.py` | Runs each task demo, writes `transcripts/NN_*.txt` | all |
+| `demos.py` | Runs each task demo, writes `transcripts/NN_*.txt` | all |
 
 ## Key design decisions
 
 **LLM switch.** `MOCK_LLM=1` (the default, used for grading) uses deterministic mocks everywhere. With `MOCK_LLM=0`
 + `GEMINI_API_KEY`, the system uses Gemini instead: CrewAI via its built-in `LLM(model="gemini/...")`, and Autogen via
-`autogen-ext`'s OpenAI-compatible client pointed at Gemini's endpoint. One flag is read in `mock_llm.py`.
+`autogen-ext`'s OpenAI-compatible client pointed at Gemini's endpoint. One flag is read in `llm.py`.
 
 **MockLLM (CrewAI).** Subclass `crewai.llms.base_llm.BaseLLM` and implement `call()`. It reads
 only the *last* user/assistant messages, never the system prompt, so the template text

@@ -1,0 +1,2 @@
+# SLA-by-Severity Policy
+Each priority level has a first-response and a resolution target. P1 tickets must receive a first response within 15 minutes and be resolved within 4 hours. P2 tickets get a first response within 1 hour and resolution within 24 hours, P3 within 4 hours and 48 hours, and P4 within 24 hours and 72 hours. A ticket that passes its resolution target is marked as an SLA breach and appears on the daily operations report.

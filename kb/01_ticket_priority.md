@@ -1,0 +1,2 @@
+# Ticket Priority Classification Rules
+Every Ola support ticket is assigned a priority of P1, P2, P3 or P4 when it is created. P1 is reserved for rider or driver safety incidents and for payment failures affecting many users at once. P2 covers a single user who cannot book a ride, cannot log in, or was charged incorrectly by more than 500 rupees. P3 applies to app bugs with a workaround and to smaller fare disputes, while P4 is used for general questions and feature suggestions.

@@ -1,0 +1,54 @@
+# Transcript 05_chunking_eval  (MOCK_LLM=1)
+
+
+=== Collection: ola_kb_fixed (fixed chunking, top-3) ===
+Q: How quickly must a P1 ticket be resolved?
+   retrieved docs=['02_sla_by_severity', '01_ticket_priority']
+   relevant=['02_sla_by_severity']
+   P = 1/2 = 0.50   R = 1/1 = 1.00
+Q: When will my refund reach my bank account?
+   retrieved docs=['08_service_credit', '04_refund_compensation', '02_sla_by_severity']
+   relevant=['04_refund_compensation']
+   P = 1/3 = 0.33   R = 1/1 = 1.00
+Q: Who approves a refund above 2,000 rupees?
+   retrieved docs=['04_refund_compensation', '03_escalation_matrix', '08_service_credit']
+   relevant=['03_escalation_matrix', '04_refund_compensation']
+   P = 2/3 = 0.67   R = 2/2 = 1.00
+Q: What happens if I complain about the same issue again within two weeks?
+   retrieved docs=['07_repeat_complaints']
+   relevant=['07_repeat_complaints']
+   P = 1/1 = 1.00   R = 1/1 = 1.00
+Q: How long are support tickets kept before they are deleted?
+   retrieved docs=['12_data_retention']
+   relevant=['12_data_retention']
+   P = 1/1 = 1.00   R = 1/1 = 1.00
+Mean P = (0.50 + 0.33 + 0.67 + 1.00 + 1.00) / 5 = 0.70
+Mean R = (1.00 + 1.00 + 1.00 + 1.00 + 1.00) / 5 = 1.00
+
+=== Collection: ola_kb_sentence (sentence chunking, top-3) ===
+Q: How quickly must a P1 ticket be resolved?
+   retrieved docs=['02_sla_by_severity', '03_escalation_matrix']
+   relevant=['02_sla_by_severity']
+   P = 1/2 = 0.50   R = 1/1 = 1.00
+Q: When will my refund reach my bank account?
+   retrieved docs=['04_refund_compensation', '07_repeat_complaints']
+   relevant=['04_refund_compensation']
+   P = 1/2 = 0.50   R = 1/1 = 1.00
+Q: Who approves a refund above 2,000 rupees?
+   retrieved docs=['03_escalation_matrix', '04_refund_compensation']
+   relevant=['03_escalation_matrix', '04_refund_compensation']
+   P = 2/2 = 1.00   R = 2/2 = 1.00
+Q: What happens if I complain about the same issue again within two weeks?
+   retrieved docs=['07_repeat_complaints']
+   relevant=['07_repeat_complaints']
+   P = 1/1 = 1.00   R = 1/1 = 1.00
+Q: How long are support tickets kept before they are deleted?
+   retrieved docs=['12_data_retention']
+   relevant=['12_data_retention']
+   P = 1/1 = 1.00   R = 1/1 = 1.00
+Mean P = (0.50 + 0.50 + 1.00 + 1.00 + 1.00) / 5 = 0.80
+Mean R = (1.00 + 1.00 + 1.00 + 1.00 + 1.00) / 5 = 1.00
+
+Summary: fixed: mean P=0.70, mean R=1.00, sentence: mean P=0.80, mean R=1.00
+
+Recommendation: deploy sentence chunking. Both reach mean recall 1.00 (fixed 1.00), but sentence chunks give higher mean precision (0.80 vs 0.70): each chunk is one self-contained policy rule, so fewer unrelated documents ride along in the top-3, and answers never start mid-sentence.

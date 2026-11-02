@@ -1,0 +1,42 @@
+# Transcript 04_grounded_generation  (MOCK_LLM=1)
+
+--- Calibration: top-1 cosine similarity, both collections ---
+IN   fixed=0.9092 sentence=0.9048  How quickly must a P1 ticket be resolved?
+IN   fixed=0.8508 sentence=0.8754  When will my refund reach my bank account?
+IN   fixed=0.8521 sentence=0.8499  Who approves a refund above 2,000 rupees?
+IN   fixed=0.8775 sentence=0.8931  What happens if I complain about the same issue again within two weeks?
+IN   fixed=0.9142 sentence=0.9125  How long are support tickets kept before they are deleted?
+OUT  fixed=0.7668 sentence=0.7609  What is the capital of France?
+OUT  fixed=0.7857 sentence=0.7830  Can you give me a good recipe for chicken biryani?
+OUT  fixed=0.7376 sentence=0.7426  Who won the cricket world cup in 2011?
+OUT  fixed=0.7718 sentence=0.7875  What is the weather in Mumbai today?
+OUT  fixed=0.8054 sentence=0.8067  How do I reset my Netflix password?
+OUT  fixed=0.7906 sentence=0.7929  Tell me a joke
+
+Chosen threshold: 0.83 (collection: sentence)
+
+--- Grounded generation: 5 in-scope + 1 out-of-scope ---
+
+Q: How quickly must a P1 ticket be resolved?
+   top-1=0.9048 grounded=True sources=['02_sla_by_severity', '03_escalation_matrix']
+   A: P1 tickets must receive a first response within 15 minutes and be resolved within 4 hours.
+
+Q: When will my refund reach my bank account?
+   top-1=0.8754 grounded=True sources=['04_refund_compensation', '07_repeat_complaints']
+   A: Refunds go back to the original payment method within 5 to 7 business days, or instantly to Ola Money if the rider chooses it.
+
+Q: Who approves a refund above 2,000 rupees?
+   top-1=0.8499 grounded=True sources=['03_escalation_matrix', '04_refund_compensation']
+   A: Tier 2 escalates to the Tier 3 operations manager for any safety incident, any refund above 2,000 rupees, or any ticket that has already breached its SLA.
+
+Q: What happens if I complain about the same issue again within two weeks?
+   top-1=0.8931 grounded=True sources=['07_repeat_complaints']
+   A: A complaint counts as a repeat when the same customer raises the same category of issue within 14 days of a previous ticket.
+
+Q: How long are support tickets kept before they are deleted?
+   top-1=0.9125 grounded=True sources=['12_data_retention']
+   A: Support tickets and their chat transcripts are retained for 24 months after the ticket is closed and are then permanently deleted. Tickets involving a safety incident or a legal claim are kept for 7 years.
+
+Q: What is the capital of France?
+   top-1=0.7609 grounded=False sources=[]
+   A: I don't know. That isn't covered by Ola's support policies I have access to.

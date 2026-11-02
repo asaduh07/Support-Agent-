@@ -1,0 +1,2 @@
+# Feedback Collection Process
+When a ticket is marked Resolved, the customer receives a short in-app survey asking for a 1 to 5 satisfaction rating and an optional comment. The survey stays open for 7 days, after which the ticket moves from Resolved to Closed. A rating of 1 or 2 automatically reopens the ticket for a quality review by a team lead. Feedback scores are aggregated weekly by category to identify the most common causes of dissatisfaction.

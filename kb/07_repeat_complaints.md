@@ -1,0 +1,2 @@
+# Repeat Complaint Handling Policy
+A complaint counts as a repeat when the same customer raises the same category of issue within 14 days of a previous ticket. Repeat complaints are automatically raised by one priority level and routed to a Tier 2 specialist instead of the frontline queue. If a customer files three repeat complaints within 30 days, the case is reviewed by the operations manager to find the root cause. The agent must link the new ticket to the earlier ones so the full history is visible.

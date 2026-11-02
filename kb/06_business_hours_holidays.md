@@ -1,0 +1,2 @@
+# Business Hours and Holiday Support Policy
+Safety and P1 support runs 24 hours a day, 7 days a week, including national holidays. Standard support for P2 to P4 tickets is staffed from 7 AM to 11 PM IST every day. On national holidays, P3 and P4 SLA timers are paused and resume on the next working day, but P1 and P2 timers keep running. Tickets raised outside staffed hours receive an automatic acknowledgement with the expected response time.

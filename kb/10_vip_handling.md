@@ -1,0 +1,2 @@
+# VIP Customer Handling Policy
+Customers on Ola Select membership, corporate accounts, and drivers with a rating above 4.8 and over 2,000 trips are treated as VIP customers. VIP tickets skip the frontline queue and go directly to a dedicated Tier 2 team. Every VIP ticket gets one priority level higher than a regular ticket with the same issue, but never higher than P1. VIP status never overrides the safety and data-protection rules that apply to everyone.

@@ -1,0 +1,2 @@
+# Outage Communication Protocol
+An outage is declared when booking, payments, or driver allocation fail for more than 5 percent of requests in a city for 10 minutes or longer. Within 30 minutes of declaring an outage, a banner is shown in the app and a status update is posted on official Ola channels. Updates are repeated every 60 minutes until the service is restored, followed by a resolution notice. Tickets created because of the outage are tagged to the incident and closed together once it is resolved.

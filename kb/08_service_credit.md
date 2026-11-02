@@ -1,0 +1,2 @@
+# Service Credit Policy
+Service credits are Ola Money credits issued when Ola fails to meet a promised service level, such as a breached SLA or a ride cancelled because of a platform error. A breached P1 or P2 SLA earns a credit of 100 rupees, and a platform-caused cancellation earns 50 rupees. Credits expire after 90 days, cannot be converted to cash, and are limited to 500 rupees per customer per calendar month. Service credits are separate from refunds and do not replace a refund that is owed.

@@ -1,0 +1,2 @@
+# Escalation Matrix
+Tickets are escalated in three tiers when they cannot be closed at the current level. Tier 1 frontline agents escalate to a Tier 2 specialist when a ticket reaches 75 percent of its SLA time or needs access to payment or trip logs. Tier 2 escalates to the Tier 3 operations manager for any safety incident, any refund above 2,000 rupees, or any ticket that has already breached its SLA. Every escalation must record the reason, and the ticket status is changed to Escalated until the receiving tier accepts it.

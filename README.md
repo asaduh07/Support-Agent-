@@ -18,15 +18,18 @@ It also has guardrails, session memory, evaluation and governance controls.
 
 | Choice | Value |
 |---|---|
-| Seed | `TBD` |
-| Record count | `TBD` (≥40) |
-| Category weights | `TBD` |
-| Status weights | `TBD` |
-| `escalated` probability | `TBD` (result must land in 10–30%) |
-| `resolution_time_hours` range | `TBD`, with reasoning: `TBD` |
+| Seed | `42` (`random.Random(42)`) |
+| Record count | `50` |
+| Category weights | Billing 0.30, Technical Issue 0.25, Account Access 0.15, Product Defect 0.10, General Inquiry 0.20 |
+| Status weights | Open 0.20, In Progress 0.20, Escalated 0.10, Resolved 0.30, Closed 0.20 |
+| `escalated` rule | `True` if status is `Escalated`, else `True` with probability 0.12 |
+| `resolution_time_hours` range | uniform 1.0–72.0, rounded to 0.1. Most rider/driver tickets close within a shift, but billing and defect investigations can take up to 3 days |
 | `days_since_created` | integer, 0–30 |
 
-Generated counts (per category, per status, % escalated): `TBD`. These are pasted from `python dataset.py`.
+Generated with the first draw on seed 42; no seed or weight changes were needed. Output of `python dataset.py`:
+- Per category: Billing 18, Technical Issue 10, Account Access 7, Product Defect 3, General Inquiry 12
+- Per status: Open 12, In Progress 7, Escalated 5, Resolved 13, Closed 13
+- `escalated=True`: 12/50 = **24.0%**
 
 ## Quick start
 
@@ -37,7 +40,7 @@ py -3.10 -m venv .venv
 pip install -r requirements.txt
 
 python dataset.py                 # Task 1: dataset + stats
-python run_demos.py               # Tasks 1-16: regenerates every transcript
+python demos.py                   # regenerates every transcript (or: python demos.py 04 05)
 uvicorn app:app --reload          # Task 11: API on http://127.0.0.1:8000
 ```
 
@@ -50,15 +53,34 @@ with E5's required `query: ` / `passage: ` prefixes.
 ## Results summary. Filled in after implementation
 
 ### RAG threshold calibration (Task 4)
-| Query | In/Out scope | Top-1 cosine |
-|---|---|---|
-| `TBD` | | |
+Measured with E5 (`intfloat/e5-small-v2`); full output is in `transcripts/04_grounded_generation.txt`.
 
-Chosen "I don't know" threshold: `TBD`. It sits between the in-scope and out-of-scope clusters observed above.
+| Query | Scope | Top-1 fixed | Top-1 sentence |
+|---|---|---|---|
+| How quickly must a P1 ticket be resolved? | IN | 0.9092 | 0.9048 |
+| When will my refund reach my bank account? | IN | 0.8508 | 0.8754 |
+| Who approves a refund above 2,000 rupees? | IN | 0.8521 | 0.8499 |
+| What happens if I complain about the same issue again within two weeks? | IN | 0.8775 | 0.8931 |
+| How long are support tickets kept before they are deleted? | IN | 0.9142 | 0.9125 |
+| What is the capital of France? | OUT | 0.7668 | 0.7609 |
+| Can you give me a good recipe for chicken biryani? | OUT | 0.7857 | 0.7830 |
+| Who won the cricket world cup in 2011? | OUT | 0.7376 | 0.7426 |
+| What is the weather in Mumbai today? | OUT | 0.7718 | 0.7875 |
+| How do I reset my Netflix password? | OUT | 0.8054 | 0.8067 |
+| Tell me a joke | OUT | 0.7906 | 0.7929 |
+
+The in-scope cluster spans **0.8499–0.9142** and the out-of-scope cluster spans **0.7376–0.8067**. E5 scores even unrelated text around 0.75–0.80, so tutorial presets such as 0.5, 0.6 or 0.7 would let every query through.
+**Chosen threshold: 0.83**, roughly the midpoint of the 0.8067–0.8499 gap. The closest out-of-scope probe ("reset my Netflix password", which sounds like a support question) sits 0.023 below it.
 
 ### Chunking comparison (Task 5)
-Per-query precision/recall for both collections: see `transcripts/05_chunking_eval.txt`.
-Recommendation: `TBD`
+Per-query precision/recall arithmetic for both collections is in `transcripts/05_chunking_eval.txt` (top-3, document level, deduplicated).
+
+| Collection | Mean precision | Mean recall |
+|---|---|---|
+| `ola_kb_fixed` (200 chars, 50 overlap) | 0.70 | 1.00 |
+| `ola_kb_sentence` | **0.80** | 1.00 |
+
+**Recommendation: deploy sentence chunking.** Both strategies reach a mean recall of 1.00, but sentence chunks give higher mean precision (0.80 vs 0.70). Each chunk is one self-contained policy rule, so fewer unrelated documents come along in the top-3 (for example, the refund query pulls in 3 documents with fixed chunking against 2 with sentence chunking). Answers also never start mid-sentence. The crew uses `ola_kb_sentence`.
 
 ### Escalation score (Task 6)
 Formula: `TBD`. Threshold: `TBD`, justified by: `TBD`
