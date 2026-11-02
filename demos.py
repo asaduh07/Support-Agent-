@@ -137,11 +137,98 @@ def t10_guardrails():
           f"GUARDRAIL FIRED: {r.guardrail}\nAGENT: {r.answer}")
 
 
+PORT = 8765
+NEW_DOC = ("lost_and_found_policy", "Lost and Found Policy. Riders who leave an item in an Ola cab can report it from "
+           "the trip details page within 24 hours of the ride. Ola shares the report with the driver, who must respond "
+           "within 12 hours. Returned items are handed over at an Ola hub or delivered for a fee of 150 rupees.")
+
+
+def t11_fastapi():
+    """Real server: uvicorn in a subprocess, real HTTP and WebSocket clients."""
+    import asyncio
+    import subprocess
+    import time
+    import httpx
+    import websockets
+    base = f"http://127.0.0.1:{PORT}"
+    import tempfile
+    errf = tempfile.TemporaryFile(mode="w+", encoding="utf-8")  # a file, not a PIPE: an unread pipe fills and blocks the server
+    server = subprocess.Popen([sys.executable, "-m", "uvicorn", "app:app", "--port", str(PORT), "--log-level", "warning"],
+                              stdout=subprocess.DEVNULL, stderr=errf, text=True)
+    try:
+        for _ in range(120):
+            try:
+                httpx.get(f"{base}/docs", timeout=1); break
+            except httpx.HTTPError:
+                time.sleep(0.5)
+        print(f"uvicorn app:app is up on port {PORT}\n")
+        c = httpx.Client(base_url=base, timeout=120)
+
+        r = c.post("/ask", json={"query": "How often are updates posted during an outage?"})
+        print(f"POST /ask -> {r.status_code}\n{r.json()}\n")
+        r = c.post("/ask", json={"query": ""})
+        print(f"POST /ask with empty query -> {r.status_code} (Pydantic validation): {r.json()['detail'][0]['msg']}\n")
+        r = c.post("/add-document", json={"doc_id": NEW_DOC[0], "text": NEW_DOC[1]})
+        print(f"POST /add-document -> {r.status_code}\n{r.json()}")
+        r = c.post("/ask", json={"query": "How do I report an item I left in the cab?"})
+        print(f"POST /ask about the new document -> {r.status_code}\n{r.json()}\n")
+
+        async def ws_demo():
+            async with websockets.connect(f"ws://127.0.0.1:{PORT}/chat") as a:
+                await a.send("What is the status of ticket OLA-0007?")
+                print("WS client A: sent a question, then disconnected abruptly before the reply arrived")
+            async with websockets.connect(f"ws://127.0.0.1:{PORT}/chat") as b:
+                for q in ["What is the status of ticket OLA-0020?", "Should it be escalated?"]:
+                    await b.send(q)
+                    print(f"WS client B: {q}\n   <- {json.loads(await b.recv())['answer']}")
+        import json
+        asyncio.run(ws_demo())
+
+        r = c.post("/ask", json={"query": "What are the support hours for standard tickets?"})
+        print(f"\nPOST /ask after the disconnect -> {r.status_code}: {r.json()['answer']}")
+        print(f"Server process still running: {server.poll() is None}")
+    finally:
+        rag.collection("sentence").delete(where={"doc_id": NEW_DOC[0]})  # keep the KB index reproducible
+        rag.collection("fixed").delete(where={"doc_id": NEW_DOC[0]})
+        server.terminate()
+        server.wait(timeout=30)
+        errf.seek(0)
+        err = errf.read()
+    tracebacks = err.count("Traceback")
+    print(f"Server stderr tracebacks: {tracebacks}")
+
+
+def t12_logging():
+    import json
+    from fastapi.testclient import TestClient
+    import app
+    raw = ["+91 98765 43210", "9123456789"]
+    q = f"Call me on {raw[0]} or {raw[1]}, what is the status of ticket OLA-0002?"
+    with TestClient(app.app) as c:
+        ids = [c.post("/ask", json={"query": q}).json()["trace_id"],
+               c.post("/ask", json={"query": "What counts as a repeat complaint?"}).json()["trace_id"]]
+    print(f"Request text sent: {q}\n\nLog entries written to {app.LOG_PATH.relative_to(app.LOG_PATH.parent.parent)}:")
+    lines = app.LOG_PATH.read_text(encoding="utf-8").splitlines()
+    for line in lines:
+        if json.loads(line)["trace_id"] in ids:
+            print(line)
+    whole = "\n".join(lines)
+    print(f"\nEvery line is valid JSON with trace_id and duration_ms: "
+          f"{all({'trace_id', 'duration_ms'} <= json.loads(l).keys() for l in lines)} ({len(lines)} lines)")
+    for p in raw:
+        print(f"Raw phone {p!r} anywhere in the log file: {p in whole}")
+
+
+def t13_evaluation():
+    evaluate.run_eval()
+
+
 DEMOS = {"01_dataset": t01_dataset, "03_chunk_index": t03_chunk_index,
          "04_grounded_generation": t04_grounded, "05_chunking_eval": t05_chunking_eval,
          "06_ticket_tool": t06_ticket_tool, "07_crew_kickoff": t07_crew,
          "08a_memory_multiturn": t08a_memory_multiturn, "08b_memory_fresh": t08b_memory_fresh,
-         "09_structured_output": t09_structured_output, "10_guardrails": t10_guardrails}
+         "09_structured_output": t09_structured_output, "10_guardrails": t10_guardrails,
+         "11_fastapi": t11_fastapi, "12_logging": t12_logging, "13_evaluation": t13_evaluation}
 
 if __name__ == "__main__":
     out = Path("transcripts"); out.mkdir(exist_ok=True)

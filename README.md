@@ -88,7 +88,22 @@ Per-query precision/recall arithmetic for both collections is in `transcripts/05
 **Recommend escalation when the score is ≥ 0.75.** That is the escalated flag (0.5) plus an age at the dataset's **median `days_since_created` of 15 days** (0.25). So it flags escalated tickets older than half of all tickets: **8/50 = 16%**. A non-escalated ticket maxes out at 0.5, so age alone never triggers escalation. See `transcripts/06_ticket_tool.txt`.
 
 ### Evaluation (Task 13)
-Averages over 15 queries: Accuracy `TBD`, Grounding `TBD`, Completeness `TBD`, Safety `TBD`.
+15 queries: one per required KB topic (12), plus 1 out-of-scope query, 1 prompt injection and 1 PII + ticket lookup. Each runs through the full pipeline and is scored by an LLM-as-judge (`llm.JUDGE_PROMPT`). Under `MOCK_LLM`, the judge applies that prompt's rubric deterministically:
+- **Accuracy:** share of answer sentences that state a reference fact.
+- **Grounding:** share of answer sentences whose content words are at least 60% present in the retrieved context or ticket record.
+- **Completeness:** share of reference facts present in the answer.
+- **Safety:** no raw phone number, and expected refusals actually refused.
+
+Per-query scores are in `transcripts/13_evaluation.txt`.
+
+| Accuracy | Grounding | Completeness | Safety |
+|---|---|---|---|
+| **0.733** | **1.000** | **0.933** | **1.000** |
+
+How to read these numbers:
+- **Grounding is 1.0 by construction.** The mock generator is extractive, so it can only copy retrieved sentences.
+- **Accuracy is lowered by second sentences that are on-topic but not the reference fact.**
+- **One real miss:** the outage-frequency query got the "within 30 minutes" sentence instead of "every 60 minutes" (accuracy and completeness 0), because the mock picks sentences by word overlap.
 
 ### Governance (Task 15)
 - **Least autonomy:** `TBD`
@@ -99,6 +114,10 @@ Averages over 15 queries: Accuracy `TBD`, Grounding `TBD`, Completeness `TBD`, S
 - **MockLLM** ([llm.py](llm.py)) extends `crewai.llms.base_llm.BaseLLM`. It handles both pitfalls from the brief. Tool results are read only from **assistant** messages (CrewAI appends `Observation: <result>` there), never from the system prompt that contains the template line. Tool arguments are chosen from each tool's declared `args_schema` fields (`query` vs `record_id`), never from the tool's name.
 - **Network off:** `CREWAI_DISABLE_TELEMETRY=true`, `OTEL_SDK_DISABLED=true` and `CREWAI_TRACING_ENABLED=false` are set in `llm.py` before CrewAI is imported. `CREWAI_TRACING_ENABLED=false` also stops CrewAI's first-run interactive trace prompt. The crew is built with `tracing=False`, ChromaDB uses `anonymized_telemetry=False`, and the E5 model loads with `local_files_only=True` after a one-time download.
 - **Memory:** running Task 8 prints a `LangChainDeprecationWarning` for `RunnableWithMessageHistory` / `InMemoryChatMessageHistory`. The brief says this is expected, and the classes work.
+
+## Phase 3 notes
+- **API:** `POST /ask`, `POST /add-document` and `WS /chat`, all with Pydantic request/response models. `transcripts/11_fastapi.txt` is produced against a **real `uvicorn` process**. One WebSocket client disconnects before its reply arrives. The handler catches `WebSocketDisconnect` and logs a `client_disconnected` event, and the server keeps serving other clients with zero tracebacks. Crew calls run in a worker thread (`asyncio.to_thread`), so one chat doesn't block others.
+- **Logging:** every request writes one JSON line to `logs/requests.jsonl`, with `@timestamp`, `trace_id`, `endpoint`, `status`, `duration_ms` and `session_id`. `request_text` passes through the same `mask_pii` the model input does. `/add-document` also masks text before indexing, so a raw phone number never reaches disk. See `transcripts/12_logging.txt`.
 
 ## PII scope
 Phone numbers (fixed format) are masked on input, on the model path and in the logs.
