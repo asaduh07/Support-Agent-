@@ -1,0 +1,46 @@
+# Transcript 09_structured_output  (MOCK_LLM=1)
+
+Schema every crew response must satisfy (crew.CrewResponse):
+{
+ "answer": {
+  "minLength": 1,
+  "title": "Answer",
+  "type": "string"
+ },
+ "grounded": {
+  "title": "Grounded",
+  "type": "boolean"
+ },
+ "sources": {
+  "items": {
+   "type": "string"
+  },
+  "title": "Sources",
+  "type": "array"
+ },
+ "ticket": {
+  "anyOf": [
+   {
+    "$ref": "#/$defs/TicketInfo"
+   },
+   {
+    "type": "null"
+   }
+  ],
+  "default": null
+ }
+} ...
+
+Q: How long are support tickets kept before they are deleted?
+   valid CrewResponse: {"answer":"Support tickets and their chat transcripts are retained for 24 months after the ticket is closed and are then permanently deleted. Tickets involving a safety incident or a legal claim are kept for 7 years.","grounded":true,"sources":["12_data_retention"],"ticket":null}
+
+Q: What is the status of ticket OLA-0008?
+   valid CrewResponse: {"answer":"Ticket OLA-0008 (Billing) is Escalated, created 2 days ago, resolution time 66.5 hours, escalation score 0.533: no escalation needed.","grounded":true,"sources":[],"ticket":{"record_id":"OLA-0008","status":"Escalated","category":"Billing","resolution_time_hours":66.5,"days_since_created":2,"escalation_score":0.533,"recommend_escalation":false}}
+
+Q: What is the capital of France?
+   valid CrewResponse: {"answer":"I don't know. That isn't covered by Ola's support policies I have access to.","grounded":false,"sources":[],"ticket":null}
+
+Malformed response rejected by validation (3 errors):
+   ('answer',): String should have at least 1 character
+   ('grounded',): Input should be a valid boolean, unable to interpret input
+   ('sources',): Input should be a valid list

@@ -1,0 +1,8 @@
+# Transcript 08b_memory_fresh  (MOCK_LLM=1)
+
+Fresh session: same follow-up, but no earlier turn mentioned a ticket.
+
+USER: Should it be escalated?
+AGENT: Which ticket do you mean? Please share the ticket ID (format OLA-0000).
+
+[session 'rider-session-B' history now holds 2 messages]

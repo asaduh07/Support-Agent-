@@ -83,7 +83,9 @@ Per-query precision/recall arithmetic for both collections is in `transcripts/05
 **Recommendation: deploy sentence chunking.** Both strategies reach a mean recall of 1.00, but sentence chunks give higher mean precision (0.80 vs 0.70). Each chunk is one self-contained policy rule, so fewer unrelated documents come along in the top-3 (for example, the refund query pulls in 3 documents with fixed chunking against 2 with sentence chunking). Answers also never start mid-sentence. The crew uses `ola_kb_sentence`.
 
 ### Escalation score (Task 6)
-Formula: `TBD`. Threshold: `TBD`, justified by: `TBD`
+`escalation_score = 0.5 * escalated + 0.5 * min(days_since_created, 30) / 30`, which is always in [0, 1]. Older tickets score higher, because they are closer to breaching their SLA.
+
+**Recommend escalation when the score is ≥ 0.75.** That is the escalated flag (0.5) plus an age at the dataset's **median `days_since_created` of 15 days** (0.25). So it flags escalated tickets older than half of all tickets: **8/50 = 16%**. A non-escalated ticket maxes out at 0.5, so age alone never triggers escalation. See `transcripts/06_ticket_tool.txt`.
 
 ### Evaluation (Task 13)
 Averages over 15 queries: Accuracy `TBD`, Grounding `TBD`, Completeness `TBD`, Safety `TBD`.
@@ -92,6 +94,11 @@ Averages over 15 queries: Accuracy `TBD`, Grounding `TBD`, Completeness `TBD`, S
 - **Least autonomy:** `TBD`
 - **Risk classification:** `TBD`
 - **Runtime budget cap:** `TBD`
+
+## Phase 2 notes
+- **MockLLM** ([llm.py](llm.py)) extends `crewai.llms.base_llm.BaseLLM`. It handles both pitfalls from the brief. Tool results are read only from **assistant** messages (CrewAI appends `Observation: <result>` there), never from the system prompt that contains the template line. Tool arguments are chosen from each tool's declared `args_schema` fields (`query` vs `record_id`), never from the tool's name.
+- **Network off:** `CREWAI_DISABLE_TELEMETRY=true`, `OTEL_SDK_DISABLED=true` and `CREWAI_TRACING_ENABLED=false` are set in `llm.py` before CrewAI is imported. `CREWAI_TRACING_ENABLED=false` also stops CrewAI's first-run interactive trace prompt. The crew is built with `tracing=False`, ChromaDB uses `anonymized_telemetry=False`, and the E5 model loads with `local_files_only=True` after a one-time download.
+- **Memory:** running Task 8 prints a `LangChainDeprecationWarning` for `RunnableWithMessageHistory` / `InMemoryChatMessageHistory`. The brief says this is expected, and the classes work.
 
 ## PII scope
 Phone numbers (fixed format) are masked on input, on the model path and in the logs.

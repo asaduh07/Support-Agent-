@@ -1,0 +1,13 @@
+# Transcript 06_ticket_tool  (MOCK_LLM=1)
+
+Formula: escalation_score = 0.5 * escalated + 0.5 * min(days_since_created, 30) / 30   (older = higher)
+Threshold: recommend escalation when score >= 0.75
+Dataset: median days_since_created = 15.0, deciles = [2.0, 4.2, 6.3, 12.0, 15.0, 19.6, 23.0, 26.6, 28.9]
+  0.75 = escalated (0.5) + age at the median (15/30 * 0.5 = 0.25), so it flags escalated tickets older than half the dataset: 8/50 = 16% of tickets.
+  Non-escalated tickets max out at 0.5, so age alone never triggers it.
+
+check_support_ticket_status('OLA-0007') -> {'record_id': 'OLA-0007', 'found': True, 'status': 'Open', 'category': 'General Inquiry', 'resolution_time_hours': 43.9, 'days_since_created': 25, 'escalated': True, 'escalation_score': 0.917, 'recommend_escalation': True}
+check_support_ticket_status('OLA-0008') -> {'record_id': 'OLA-0008', 'found': True, 'status': 'Escalated', 'category': 'Billing', 'resolution_time_hours': 66.5, 'days_since_created': 2, 'escalated': True, 'escalation_score': 0.533, 'recommend_escalation': False}
+check_support_ticket_status('OLA-0014') -> {'record_id': 'OLA-0014', 'found': True, 'status': 'In Progress', 'category': 'Technical Issue', 'resolution_time_hours': 20.2, 'days_since_created': 29, 'escalated': False, 'escalation_score': 0.483, 'recommend_escalation': False}
+check_support_ticket_status('OLA-0001') -> {'record_id': 'OLA-0001', 'found': True, 'status': 'Resolved', 'category': 'Billing', 'resolution_time_hours': 20.5, 'days_since_created': 7, 'escalated': False, 'escalation_score': 0.117, 'recommend_escalation': False}
+check_support_ticket_status('OLA-9999') -> {'record_id': 'OLA-9999', 'found': False}

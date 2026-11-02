@@ -38,7 +38,10 @@ CHUNKERS = {"fixed": fixed_chunks, "sentence": sentence_chunks}
 @lru_cache(maxsize=1)
 def _model():
     from sentence_transformers import SentenceTransformer
-    return SentenceTransformer(MODEL_NAME)
+    try:  # zero network at runtime: use the locally cached model
+        return SentenceTransformer(MODEL_NAME, local_files_only=True)
+    except OSError:  # first run only: one-time download
+        return SentenceTransformer(MODEL_NAME)
 
 
 def embed(texts, kind):
@@ -67,6 +70,12 @@ def index_document(doc_id, text, strategy):
     return len(chunks)
 
 
+def add_document(doc_id, text):
+    """Index a new doc into both collections; cached answers may now be stale, so drop them."""
+    CACHE.clear()
+    return {s: index_document(doc_id, text, s) for s in CHUNKERS}
+
+
 def build_index():
     """Index every KB doc into BOTH collections. Returns {strategy: chunk_count}."""
     docs = load_docs()
@@ -84,15 +93,33 @@ def retrieve(query, strategy=DEFAULT_STRATEGY, k=TOP_K):
 IDK = "I don't know. That isn't covered by Ola's support policies I have access to."
 
 
+CACHE = {}  # Task 16: normalized query -> grounded_answer result (in-process)
+
+
+def normalize(query):
+    return " ".join(re.sub(r"[^\w\s-]", " ", query.lower()).split())
+
+
 def grounded_answer(query, strategy=DEFAULT_STRATEGY, k=TOP_K, threshold=None):
+    """Cached front of _grounded_answer: a repeated query skips retrieval and the LLM call."""
+    key = (normalize(query), strategy, k, threshold)
+    if key not in CACHE:
+        CACHE[key] = _grounded_answer(query, strategy, k, threshold)
+    return CACHE[key]
+
+
+def _grounded_answer(query, strategy, k, threshold):
     """Answer using ONLY retrieved context; fall back to IDK when top-1 similarity is below threshold."""
     threshold = THRESHOLD if threshold is None else threshold
     hits = retrieve(query, strategy, k)
     top = hits[0]["score"] if hits else 0.0
     if top < threshold:
         return {"answer": IDK, "grounded": False, "top_score": top, "sources": [], "context": hits}
+    answer = llm.generate_grounded(query, [h["text"] for h in hits])
+    if not answer.strip():  # similar topic, but no retrieved sentence actually addresses the query
+        return {"answer": IDK, "grounded": False, "top_score": top, "sources": [], "context": hits}
     return {
-        "answer": llm.generate_grounded(query, [h["text"] for h in hits]),
+        "answer": answer,
         "grounded": True,
         "top_score": top,
         "sources": sorted({h["doc_id"] for h in hits}),

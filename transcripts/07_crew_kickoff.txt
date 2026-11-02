@@ -1,0 +1,10 @@
+# Transcript 07_crew_kickoff  (MOCK_LLM=1)
+
+Q: When will my refund reach my bank account?
+   tool invocations during kickoff(): {'rag_lookup': 1, 'check_support_ticket_status': 0}
+   answer: Refunds go back to the original payment method within 5 to 7 business days, or instantly to Ola Money if the rider chooses it.
+
+Q: What is the status of ticket OLA-0007?
+   tool invocations during kickoff(): {'rag_lookup': 1, 'check_support_ticket_status': 1}
+   answer: Ticket OLA-0007 (General Inquiry) is Open, created 25 days ago, resolution time 43.9 hours, escalation score 0.917: escalation recommended.
+

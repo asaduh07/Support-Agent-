@@ -1,0 +1,10 @@
+# Transcript 08a_memory_multiturn  (MOCK_LLM=1)
+
+USER: What is the status of ticket OLA-0007?
+AGENT: Ticket OLA-0007 (General Inquiry) is Open, created 25 days ago, resolution time 43.9 hours, escalation score 0.917: escalation recommended.
+
+USER: Should it be escalated?
+   (memory resolved the query to: Should it be escalated? (ticket OLA-0007))
+AGENT: Every escalation must record the reason, and the ticket status is changed to Escalated until the receiving tier accepts it. Ticket OLA-0007 (General Inquiry) is Open, created 25 days ago, resolution time 43.9 hours, escalation score 0.917: escalation recommended.
+
+[session 'rider-session-A' history now holds 4 messages]
