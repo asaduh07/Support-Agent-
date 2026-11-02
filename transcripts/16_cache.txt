@@ -1,0 +1,10 @@
+# Transcript 16_cache  (MOCK_LLM=1)
+
+Cache key = normalized query: 'how long are closed support tickets retained' == 'how long are closed support tickets retained': True
+
+1st call (miss)    generate_grounded LLM calls +1, 14.5 ms, cache size 1: Support tickets and their chat transcripts are retained for ...
+2nd call (repeat)  generate_grounded LLM calls +0, 0.0 ms, cache size 1: Support tickets and their chat transcripts are retained for ...
+
+Same effect inside the full pipeline (rag_lookup tool -> cached grounded generation):
+  1st ask: generate_grounded LLM calls +1
+  2nd ask: generate_grounded LLM calls +0

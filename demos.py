@@ -223,12 +223,90 @@ def t13_evaluation():
     evaluate.run_eval()
 
 
+def t14_review():
+    import crew
+    import review
+    cases = [("What counts as a repeat complaint?", None),
+             ("How long does a refund take to reach my original payment method?",
+              "You will also receive a 1,000 rupee bonus credit for this inconvenience.")]  # deliberately ungrounded
+    for q, injected in cases:
+        draft = crew.run_crew(q).answer  # the CrewAI Composer's draft
+        if injected:
+            draft = f"{draft} {injected}"
+        context = "\n".join(h["text"] for h in rag.grounded_answer(q)["context"])
+        verdict, messages = review.review(draft, context)
+        print(f"Q: {q}\nDRAFT{' (with injected ungrounded claim)' if injected else ''}: {draft}")
+        for m in messages[1:]:  # [0] is the task message
+            print(f"   [{m.source}] ({type(m).__name__}) {m.content}")
+        print(f"VERDICT is a {type(verdict).__name__}: approved={verdict.approved}, "
+              f"unchanged={verdict.final_answer == draft}\n")
+
+
+def t15_governance():
+    import llm
+    import pipeline
+    from crew import LOOKUP_ROLE, assert_least_autonomy, build_agents, build_crew
+    from tools import LOOKUP_TOOL_NAME, ticket_status_tool
+    print("--- Application layer: least autonomy ---")
+    agents = build_agents()
+    for a in agents:
+        print(f"  {a.role:<24} tools={[t.name for t in a.tools]}")
+    assert_least_autonomy(agents)
+    print(f"  Real crew passes the guard: only '{LOOKUP_ROLE}' holds {LOOKUP_TOOL_NAME}.")
+    retrieval, lookup, composer = build_agents()
+    composer.tools = [ticket_status_tool]  # deliberately mis-wire the lookup tool to another agent
+    try:
+        build_crew((retrieval, lookup, composer))
+        print("  !! mis-wired crew was built (guard failed)")
+    except PermissionError as e:
+        print(f"  Mis-wired crew (Composer given {LOOKUP_TOOL_NAME}) -> PermissionError: {e}")
+    print("\n--- Runtime layer: per-request token budget cap ---")
+    print(f"  Cap: {pipeline.MAX_INPUT_TOKENS} tokens per request (estimated as ceil(chars / 4)).")
+    ok = "What is the SLA for a P2 ticket?"
+    print(f"  Normal request: ~{pipeline.estimate_tokens(ok)} tokens -> allowed")
+    big = "Please explain the refund policy in detail. " * 40
+    before = dict(llm.CALLS)
+    try:
+        pipeline.answer(big, "budget-demo")
+        print("  !! oversized request was processed (cap failed)")
+    except pipeline.BudgetExceeded as e:
+        print(f"  Oversized request ({len(big)} chars) -> BudgetExceeded: {e}")
+    print(f"  LLM calls made for the oversized request: {sum(llm.CALLS.values()) - sum(before.values())}")
+    from fastapi.testclient import TestClient
+    import app
+    with TestClient(app.app) as c:
+        r = c.post("/ask", json={"query": big})
+    print(f"  Same request over HTTP: POST /ask -> {r.status_code} {r.json()['detail']}")
+
+
+def t16_cache():
+    import time
+    import llm
+    import pipeline
+    rag.CACHE.clear()
+    q1, q2 = "How long are closed support tickets retained?", "  how long are CLOSED support tickets retained "
+    print(f"Cache key = normalized query: {rag.normalize(q1)!r} == {rag.normalize(q2)!r}: "
+          f"{rag.normalize(q1) == rag.normalize(q2)}\n")
+    for label, q in [("1st call (miss)", q1), ("2nd call (repeat)", q2)]:
+        calls, t = llm.CALLS["generate_grounded"], time.perf_counter()
+        r = rag.grounded_answer(q)
+        print(f"{label:<18} generate_grounded LLM calls +{llm.CALLS['generate_grounded'] - calls}, "
+              f"{(time.perf_counter() - t) * 1000:.1f} ms, cache size {len(rag.CACHE)}: {r['answer'][:60]}...")
+    print("\nSame effect inside the full pipeline (rag_lookup tool -> cached grounded generation):")
+    rag.CACHE.clear()
+    for label in ["1st ask", "2nd ask"]:
+        calls = llm.CALLS["generate_grounded"]
+        pipeline.answer(q1, f"cache-{label}")
+        print(f"  {label}: generate_grounded LLM calls +{llm.CALLS['generate_grounded'] - calls}")
+
+
 DEMOS = {"01_dataset": t01_dataset, "03_chunk_index": t03_chunk_index,
          "04_grounded_generation": t04_grounded, "05_chunking_eval": t05_chunking_eval,
          "06_ticket_tool": t06_ticket_tool, "07_crew_kickoff": t07_crew,
          "08a_memory_multiturn": t08a_memory_multiturn, "08b_memory_fresh": t08b_memory_fresh,
          "09_structured_output": t09_structured_output, "10_guardrails": t10_guardrails,
-         "11_fastapi": t11_fastapi, "12_logging": t12_logging, "13_evaluation": t13_evaluation}
+         "11_fastapi": t11_fastapi, "12_logging": t12_logging, "13_evaluation": t13_evaluation,
+         "14_review_stage": t14_review, "15_governance": t15_governance, "16_cache": t16_cache}
 
 if __name__ == "__main__":
     out = Path("transcripts"); out.mkdir(exist_ok=True)

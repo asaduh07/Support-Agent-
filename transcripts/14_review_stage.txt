@@ -1,0 +1,14 @@
+# Transcript 14_review_stage  (MOCK_LLM=1)
+
+Q: What counts as a repeat complaint?
+DRAFT: A complaint counts as a repeat when the same customer raises the same category of issue within 14 days of a previous ticket. Repeat complaints are automatically raised by one priority level and routed to a Tier 2 specialist instead of the frontline queue.
+   [Policy_Compliance_Reviewer] (TextMessage) COMPLIANT: every sentence is supported by the context.
+   [Final_Editor] (StructuredMessage[Verdict]) approved=True final_answer='A complaint counts as a repeat when the same customer raises the same category of issue within 14 days of a previous ticket. Repeat complaints are automatically raised by one priority level and routed to a Tier 2 specialist instead of the frontline queue.' reason='Reviewer found every sentence grounded.'
+VERDICT is a Verdict: approved=True, unchanged=True
+
+Q: How long does a refund take to reach my original payment method?
+DRAFT (with injected ungrounded claim): Refunds go back to the original payment method within 5 to 7 business days, or instantly to Ola Money if the rider chooses it. You will also receive a 1,000 rupee bonus credit for this inconvenience.
+   [Policy_Compliance_Reviewer] (TextMessage) UNSUPPORTED: You will also receive a 1,000 rupee bonus credit for this inconvenience.
+   [Final_Editor] (StructuredMessage[Verdict]) approved=False final_answer='Refunds go back to the original payment method within 5 to 7 business days, or instantly to Ola Money if the rider chooses it.' reason="Removed 1 sentence(s) not supported by the retrieved context: ['You will also receive a 1,000 rupee bonus credit for this inconvenience.']"
+VERDICT is a Verdict: approved=False, unchanged=False
+

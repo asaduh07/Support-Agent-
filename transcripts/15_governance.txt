@@ -1,0 +1,15 @@
+# Transcript 15_governance  (MOCK_LLM=1)
+
+--- Application layer: least autonomy ---
+  Policy Retrieval Agent   tools=['rag_lookup']
+  Ticket Lookup Agent      tools=['check_support_ticket_status']
+  Response Composer        tools=[]
+  Real crew passes the guard: only 'Ticket Lookup Agent' holds check_support_ticket_status.
+  Mis-wired crew (Composer given check_support_ticket_status) -> PermissionError: Least-autonomy violation: 'Response Composer' may not use check_support_ticket_status; only 'Ticket Lookup Agent' may.
+
+--- Runtime layer: per-request token budget cap ---
+  Cap: 200 tokens per request (estimated as ceil(chars / 4)).
+  Normal request: ~8 tokens -> allowed
+  Oversized request (1760 chars) -> BudgetExceeded: Request needs ~440 tokens, over the per-request cap of 200. Rejected before any LLM or tool call.
+  LLM calls made for the oversized request: 0
+  Same request over HTTP: POST /ask -> 413 Request needs ~440 tokens, over the per-request cap of 200. Rejected before any LLM or tool call.

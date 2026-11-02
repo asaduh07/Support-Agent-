@@ -1,0 +1,23 @@
+# Transcript 11_fastapi  (MOCK_LLM=1)
+
+uvicorn app:app is up on port 8765
+
+POST /ask -> 200
+{'trace_id': '5b6ec0e578224add8ccb51ba025ed8f7', 'answer': 'Within 30 minutes of declaring an outage, a banner is shown in the app and a status update is posted on official Ola channels.', 'grounded': True, 'sources': ['11_outage_communication'], 'ticket': None, 'guardrail': None, 'review': {'approved': True, 'final_answer': 'Within 30 minutes of declaring an outage, a banner is shown in the app and a status update is posted on official Ola channels.', 'reason': 'Reviewer found every sentence grounded.'}}
+
+POST /ask with empty query -> 422 (Pydantic validation): String should have at least 1 character
+
+POST /add-document -> 200
+{'trace_id': '14bf47b2621841a99e3db2cc3fa45f81', 'doc_id': 'lost_and_found_policy', 'chunks_indexed': {'fixed': 2, 'sentence': 4}}
+POST /ask about the new document -> 200
+{'trace_id': '68f845010afd41aebb4b8a8b342cb8e3', 'answer': 'Riders who leave an item in an Ola cab can report it from the trip details page within 24 hours of the ride.', 'grounded': True, 'sources': ['02_sla_by_severity', '09_feedback_collection', 'lost_and_found_policy'], 'ticket': None, 'guardrail': None, 'review': {'approved': True, 'final_answer': 'Riders who leave an item in an Ola cab can report it from the trip details page within 24 hours of the ride.', 'reason': 'Reviewer found every sentence grounded.'}}
+
+WS client A: sent a question, then disconnected abruptly before the reply arrived
+WS client B: What is the status of ticket OLA-0020?
+   <- Ticket OLA-0020 (General Inquiry) is In Progress, created 15 days ago, resolution time 10.8 hours, escalation score 0.75: escalation recommended.
+WS client B: Should it be escalated?
+   <- Every escalation must record the reason, and the ticket status is changed to Escalated until the receiving tier accepts it. Ticket OLA-0020 (General Inquiry) is In Progress, created 15 days ago, resolution time 10.8 hours, escalation score 0.75: escalation recommended.
+
+POST /ask after the disconnect -> 200: Standard support for P2 to P4 tickets is staffed from 7 AM to 11 PM IST every day. P2 tickets get a first response within 1 hour and resolution within 24 hours, P3 within 4 hours and 48 hours, and P4 within 24 hours and 72 hours.
+Server process still running: True
+Server stderr tracebacks: 0

@@ -15,6 +15,7 @@ import guardrails
 import pipeline
 import rag
 from crew import TicketInfo
+from review import Verdict
 
 LOG_PATH = Path(__file__).parent / "logs" / "requests.jsonl"
 LOG_PATH.parent.mkdir(exist_ok=True)
@@ -58,6 +59,7 @@ class AskResponse(BaseModel):
     sources: list[str]
     ticket: TicketInfo | None
     guardrail: str | None
+    review: Verdict | None
 
 
 class AddDocumentRequest(BaseModel):
@@ -82,7 +84,7 @@ def _ask(query, session_id, trace_id, endpoint, started):
                 grounded=bool(resp and resp.grounded))
     return AskResponse(trace_id=trace_id, answer=r.answer, grounded=bool(resp and resp.grounded),
                        sources=resp.sources if resp else [], ticket=resp.ticket if resp else None,
-                       guardrail=r.guardrail)
+                       guardrail=r.guardrail, review=r.review)
 
 
 @app.post("/ask", response_model=AskResponse)

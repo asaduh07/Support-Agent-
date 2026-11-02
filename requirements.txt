@@ -7,3 +7,8 @@ fastapi==0.162.0
 uvicorn==0.54.0
 httpx==0.28.1
 websockets==16.1.1
+autogen-agentchat==0.7.5
+autogen-core==0.7.5
+autogen-ext[openai]==0.7.5
+googleapis-common-protos==1.70.0
+protobuf==5.29.6

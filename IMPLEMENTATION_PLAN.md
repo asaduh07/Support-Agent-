@@ -6,7 +6,7 @@ The order follows dependencies, so later phases use earlier ones as fixed inputs
 ## Phase 0: Setup
 - [x] `.venv` on Python 3.10 (CrewAI requires <3.14)
 - [x] git repo on branch `main`, `.gitignore`, `.env.example` (MOCK_LLM, telemetry, GEMINI_API_KEY)
-- [ ] Dependencies get installed per phase as needed and pinned into `requirements.txt` as we go
+- [x] Dependencies get installed per phase as needed and pinned into `requirements.txt` as we go
 - [x] Download the embedding model once: `intfloat/e5-small-v2` (E5)
 - [ ] Optional Gemini path behind `MOCK_LLM=0` (key provided by the user)
 
@@ -42,6 +42,9 @@ The order follows dependencies, so later phases use earlier ones as fixed inputs
     (an ungrounded claim injected into the draft). **[T14]**
 16. Least-autonomy guard demo, risk classification paragraph, budget-cap rejection demo. **[T15]**
 17. Query cache + call-counter before/after demo. **[T16]**
+
+## Status
+Phases 0–4 are done and all 16 tasks have transcripts. Remaining: the optional Gemini check and pushing to GitHub.
 
 ## Phase 5: Wrap-up
 - `demos.py` regenerates all transcripts from scratch

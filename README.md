@@ -50,7 +50,7 @@ uvicorn app:app --reload          # Task 11: API on http://127.0.0.1:8000
 Embeddings use the free local **E5** model (`intfloat/e5-small-v2`) via SentenceTransformers,
 with E5's required `query: ` / `passage: ` prefixes.
 
-## Results summary. Filled in after implementation
+## Results summary
 
 ### RAG threshold calibration (Task 4)
 Measured with E5 (`intfloat/e5-small-v2`); full output is in `transcripts/04_grounded_generation.txt`.
@@ -105,17 +105,46 @@ How to read these numbers:
 - **Accuracy is lowered by second sentences that are on-topic but not the reference fact.**
 - **One real miss:** the outage-frequency query got the "within 30 minutes" sentence instead of "every 60 minutes" (accuracy and completeness 0), because the mock picks sentences by word overlap.
 
-### Governance (Task 15)
-- **Least autonomy:** `TBD`
-- **Risk classification:** `TBD`
-- **Runtime budget cap:** `TBD`
+### Autogen review stage (Task 14)
+[review.py](review.py) builds a `RoundRobinGroupChat([Policy_Compliance_Reviewer, Final_Editor], max_turns=2, custom_message_types=[StructuredMessage[Verdict]])`. The Final-Editor has `output_content_type=Verdict`, where `Verdict` has the fields `approved: bool`, `final_answer: str` and `reason: str`. The team receives the CrewAI Composer's draft plus the retrieved context. Under `MOCK_LLM`, both agents use `MockReviewClient`, a deterministic `ChatCompletionClient`. The reviewer flags each draft sentence whose content words are less than 60% present in the context, and the editor removes the flagged sentences or approves the draft unchanged. `transcripts/14_review_stage.txt` shows both cases:
+- **Approved unchanged:** the repeat-complaint draft (`approved=True`, final answer identical to the draft).
+- **Revised:** the refund draft with a deliberately injected *"You will also receive a 1,000 rupee bonus credit"* claim. The reviewer flags it, and the editor removes it (`approved=False`).
 
-## Phase 2 notes
+The review stage runs in the live pipeline after the groundedness check, and the API returns the verdict.
+
+### Governance (Task 15)
+**Application layer: least autonomy.** Only the *Ticket Lookup Agent* is given `check_support_ticket_status`. The Retrieval Agent holds only `rag_lookup`, and the Composer holds no tools. Not wiring the tool elsewhere is not left to convention. `crew.assert_least_autonomy()` runs inside `build_crew()` every time a crew is built. It inspects every agent's tool list and raises `PermissionError` if any agent other than the Lookup Agent holds the lookup tool, so a mis-wired crew can never reach `kickoff()`. `transcripts/15_governance.txt` deliberately gives the tool to the Composer, and the build is refused.
+
+**Risk classification: Medium.** The scheme places customer-support ticket handling in Medium, and that is exactly what this system does: it answers policy questions and reads ticket status. It does not touch medical data, does not make hiring decisions, and does not move money. It quotes the refund policy but cannot issue a refund or read payment details. Its realistic failure modes are a wrong policy answer or a leaked phone number, which hurt customer trust but can be corrected. They are mitigated here by the groundedness refusal, the review stage and PII masking. If it were extended to execute refunds or process payment data, it would move to High.
+
+**Runtime layer: budget cap.** Each request is capped at **200 estimated tokens** (`ceil(chars / 4)`), checked in `pipeline.check_budget()` before any LLM or tool call. A 1,760-character request (~440 tokens) is rejected with `BudgetExceeded`, and 0 LLM calls are made. Over HTTP the same rejection returns **413**.
+
+### Response cache (Task 16)
+`rag.CACHE` is an in-memory dict keyed by the normalized query (lowercase, punctuation stripped, whitespace collapsed). It sits in front of grounded generation, and `/add-document` clears it. Evidence in `transcripts/16_cache.txt`:
+- **First call:** a cache miss, +1 `generate_grounded` LLM call, about 16 ms.
+- **Repeat** (different case and spacing, same normalized key): +0 LLM calls, 0.0 ms.
+- **Through the full pipeline:** the same pattern, +1 and then +0. The review stage also reuses the cached retrieval instead of searching again.
+
+## Transcripts (one per task)
+| Task | File | Task | File |
+|---|---|---|---|
+| 1 | `01_dataset.txt` | 9 | `09_structured_output.txt` |
+| 2 | `kb/*.md` (12 docs) | 10 | `10_guardrails.txt` |
+| 3 | `03_chunk_index.txt` | 11 | `11_fastapi.txt` |
+| 4 | `04_grounded_generation.txt` | 12 | `12_logging.txt` |
+| 5 | `05_chunking_eval.txt` | 13 | `13_evaluation.txt` |
+| 6 | `06_ticket_tool.txt` | 14 | `14_review_stage.txt` |
+| 7 | `07_crew_kickoff.txt` | 15 | `15_governance.txt` |
+| 8 | `08a_memory_multiturn.txt`, `08b_memory_fresh.txt` | 16 | `16_cache.txt` |
+
+`python demos.py` regenerates all of them in about 30 s (after the one-time E5 model download).
+
+## Implementation notes
 - **MockLLM** ([llm.py](llm.py)) extends `crewai.llms.base_llm.BaseLLM`. It handles both pitfalls from the brief. Tool results are read only from **assistant** messages (CrewAI appends `Observation: <result>` there), never from the system prompt that contains the template line. Tool arguments are chosen from each tool's declared `args_schema` fields (`query` vs `record_id`), never from the tool's name.
 - **Network off:** `CREWAI_DISABLE_TELEMETRY=true`, `OTEL_SDK_DISABLED=true` and `CREWAI_TRACING_ENABLED=false` are set in `llm.py` before CrewAI is imported. `CREWAI_TRACING_ENABLED=false` also stops CrewAI's first-run interactive trace prompt. The crew is built with `tracing=False`, ChromaDB uses `anonymized_telemetry=False`, and the E5 model loads with `local_files_only=True` after a one-time download.
+- **Dependencies:** `autogen-core` pins `protobuf` 5.x, so `googleapis-common-protos` is pinned to 1.70.0 (the last release built for protobuf 5). Without that pin, importing CrewAI/ChromaDB's telemetry stack fails with a protobuf `VersionError`.
 - **Memory:** running Task 8 prints a `LangChainDeprecationWarning` for `RunnableWithMessageHistory` / `InMemoryChatMessageHistory`. The brief says this is expected, and the classes work.
 
-## Phase 3 notes
 - **API:** `POST /ask`, `POST /add-document` and `WS /chat`, all with Pydantic request/response models. `transcripts/11_fastapi.txt` is produced against a **real `uvicorn` process**. One WebSocket client disconnects before its reply arrives. The handler catches `WebSocketDisconnect` and logs a `client_disconnected` event, and the server keeps serving other clients with zero tracebacks. Crew calls run in a worker thread (`asyncio.to_thread`), so one chat doesn't block others.
 - **Logging:** every request writes one JSON line to `logs/requests.jsonl`, with `@timestamp`, `trace_id`, `endpoint`, `status`, `duration_ms` and `session_id`. `request_text` passes through the same `mask_pii` the model input does. `/add-document` also masks text before indexing, so a raw phone number never reaches disk. See `transcripts/12_logging.txt`.
 

@@ -8,6 +8,8 @@ from langchain_core.runnables.history import RunnableWithMessageHistory
 from pydantic import BaseModel
 
 import guardrails
+import rag
+from review import Verdict, review as run_review
 from crew import CrewResponse, run_crew
 from llm import RECORD_ID
 
@@ -28,6 +30,7 @@ class Result(BaseModel):
     answer: str
     response: CrewResponse | None = None
     guardrail: str | None = None  # which guardrail fired, if any
+    review: Verdict | None = None  # Autogen review-stage verdict (Task 14)
     resolved_query: str | None = None  # query after memory-based reference resolution
 
 
@@ -67,9 +70,16 @@ CLARIFY = "Which ticket do you mean? Please share the ticket ID (format OLA-0000
 def _turn(inp):
     query = resolve_reference(inp["question"], inp["history"])
     if FOLLOW_UP.search(query) and not RECORD_ID.search(query):  # a follow-up, but no ticket in this session
-        return {"answer": CLARIFY, "response": None, "fired": False, "resolved_query": query}
+        return {"answer": CLARIFY, "response": None, "fired": False, "resolved_query": query, "review": None}
     resp, fired = guardrails.check_grounded(run_crew(query))
-    return {"answer": resp.answer, "response": resp, "fired": fired, "resolved_query": query}
+    verdict = None
+    if not fired:  # refusals need no review; grounded drafts go to the Autogen review team
+        context = "\n".join(h["text"] for h in rag.grounded_answer(query)["context"])  # cache hit, no recompute
+        if resp.ticket:
+            context += "\n" + resp.ticket.model_dump_json()
+        verdict, _ = run_review(resp.answer, context)
+        resp = resp.model_copy(update={"answer": verdict.final_answer})
+    return {"answer": resp.answer, "response": resp, "fired": fired, "resolved_query": query, "review": verdict}
 
 
 chat = RunnableWithMessageHistory(RunnableLambda(_turn), session_history, input_messages_key="question",
@@ -84,4 +94,5 @@ def answer(query, session_id="default"):
     check_budget(masked)
     out = chat.invoke({"question": masked}, config={"configurable": {"session_id": session_id}})
     return Result(session_id=session_id, masked_query=masked, answer=out["answer"], response=out["response"],
-                  guardrail="groundedness" if out["fired"] else None, resolved_query=out["resolved_query"])
+                  guardrail="groundedness" if out["fired"] else None, resolved_query=out["resolved_query"],
+                  review=out["review"])
