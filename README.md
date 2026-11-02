@@ -45,7 +45,15 @@ uvicorn app:app --reload          # Task 11: API on http://127.0.0.1:8000
 ```
 
 `MOCK_LLM=1` is the default. An optional real LLM (Google Gemini) can be enabled by copying
-`.env.example` to `.env` and setting `MOCK_LLM=0` and `GEMINI_API_KEY=...`. No acceptance criterion depends on it.
+`.env.example` to `.env` and setting `MOCK_LLM=0` and `GEMINI_API_KEY=...` (loaded with `python-dotenv`, and `.env` is git-ignored). No acceptance criterion depends on it, and `demos.py` always forces `MOCK_LLM=1` unless it is set explicitly.
+
+**Real-LLM path (verified manually, not graded).** The default model is `gemini-3.5-flash` (override with `GEMINI_MODEL`). With `MOCK_LLM=0`, all four LLM roles were checked against the live API:
+- **Grounded generation:** answers only from context, and says "I don't know" when the context lacks the fact.
+- **CrewAI crew:** `LLM(model="gemini/...")` produced a valid `CrewResponse`.
+- **Autogen review team:** Gemini's OpenAI-compatible endpoint removed an injected "1,000 rupee bonus" claim and returned `approved=False`.
+- **LLM-as-judge:** returned a JSON score.
+
+The free tier allows 5 requests per minute per model, and one `/ask` makes about 8 LLM calls (5–6 in the crew and 2 in the review), so real-LLM mode is only practical one request at a time.
 
 Embeddings use the free local **E5** model (`intfloat/e5-small-v2`) via SentenceTransformers,
 with E5's required `query: ` / `passage: ` prefixes.

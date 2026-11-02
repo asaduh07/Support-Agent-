@@ -3,9 +3,9 @@
 Request text sent: Call me on +91 98765 43210 or 9123456789, what is the status of ticket OLA-0002?
 
 Log entries written to logs\requests.jsonl:
-{"@timestamp": "2026-11-02T19:12:11.421011+00:00", "level": "INFO", "service": "ola-support-agent", "trace_id": "e6f004f2e0ff4c1484035e3b6e22614c", "endpoint": "POST /ask", "request_text": "Call me on [PHONE] or [PHONE], what is the status of ticket OLA-0002?", "status": 200, "duration_ms": 131.5, "session_id": "default", "guardrail": null, "grounded": true}
-{"@timestamp": "2026-11-02T19:12:11.541296+00:00", "level": "INFO", "service": "ola-support-agent", "trace_id": "b1711ab1679b41ce8dc54ddbc1360709", "endpoint": "POST /ask", "request_text": "What counts as a repeat complaint?", "status": 200, "duration_ms": 119.3, "session_id": "default", "guardrail": null, "grounded": true}
+{"@timestamp": "2026-11-02T19:38:59.547856+00:00", "level": "INFO", "service": "ola-support-agent", "trace_id": "336ca7f8535b40e3995ec6eab6b001cc", "endpoint": "POST /ask", "request_text": "Call me on [PHONE] or [PHONE], what is the status of ticket OLA-0002?", "status": 200, "duration_ms": 123.1, "session_id": "default", "guardrail": null, "grounded": true}
+{"@timestamp": "2026-11-02T19:38:59.666804+00:00", "level": "INFO", "service": "ola-support-agent", "trace_id": "3503907c51764f68b31573aab4816fd2", "endpoint": "POST /ask", "request_text": "What counts as a repeat complaint?", "status": 200, "duration_ms": 116.6, "session_id": "default", "guardrail": null, "grounded": true}
 
-Every line is valid JSON with trace_id and duration_ms: True (11 lines)
+Every line is valid JSON with trace_id and duration_ms: True (23 lines)
 Raw phone '+91 98765 43210' anywhere in the log file: False
 Raw phone '9123456789' anywhere in the log file: False

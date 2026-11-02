@@ -83,7 +83,11 @@ def _client(role):
     if llm.MOCK:
         return MockReviewClient(role)
     from autogen_ext.models.openai import OpenAIChatCompletionClient
-    return OpenAIChatCompletionClient(model=llm.GEMINI_MODEL, api_key=os.getenv("GEMINI_API_KEY"))
+    return OpenAIChatCompletionClient(
+        model=llm.GEMINI_MODEL, api_key=os.getenv("GEMINI_API_KEY"),
+        base_url="https://generativelanguage.googleapis.com/v1beta/openai/",  # Gemini's OpenAI-compatible endpoint
+        model_info=ModelInfo(vision=False, function_calling=True, json_output=True, family="unknown",
+                             structured_output=True))
 
 
 def build_team():

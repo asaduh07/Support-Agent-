@@ -3,14 +3,14 @@
 uvicorn app:app is up on port 8765
 
 POST /ask -> 200
-{'trace_id': '5b6ec0e578224add8ccb51ba025ed8f7', 'answer': 'Within 30 minutes of declaring an outage, a banner is shown in the app and a status update is posted on official Ola channels.', 'grounded': True, 'sources': ['11_outage_communication'], 'ticket': None, 'guardrail': None, 'review': {'approved': True, 'final_answer': 'Within 30 minutes of declaring an outage, a banner is shown in the app and a status update is posted on official Ola channels.', 'reason': 'Reviewer found every sentence grounded.'}}
+{'trace_id': 'e24d9a8657c84baa9159afe3b252ebb1', 'answer': 'Within 30 minutes of declaring an outage, a banner is shown in the app and a status update is posted on official Ola channels.', 'grounded': True, 'sources': ['11_outage_communication'], 'ticket': None, 'guardrail': None, 'review': {'approved': True, 'final_answer': 'Within 30 minutes of declaring an outage, a banner is shown in the app and a status update is posted on official Ola channels.', 'reason': 'Reviewer found every sentence grounded.'}}
 
 POST /ask with empty query -> 422 (Pydantic validation): String should have at least 1 character
 
 POST /add-document -> 200
-{'trace_id': '14bf47b2621841a99e3db2cc3fa45f81', 'doc_id': 'lost_and_found_policy', 'chunks_indexed': {'fixed': 2, 'sentence': 4}}
+{'trace_id': '22985e02cb9b4d77918f0723191c6fc7', 'doc_id': 'lost_and_found_policy', 'chunks_indexed': {'fixed': 2, 'sentence': 4}}
 POST /ask about the new document -> 200
-{'trace_id': '68f845010afd41aebb4b8a8b342cb8e3', 'answer': 'Riders who leave an item in an Ola cab can report it from the trip details page within 24 hours of the ride.', 'grounded': True, 'sources': ['02_sla_by_severity', '09_feedback_collection', 'lost_and_found_policy'], 'ticket': None, 'guardrail': None, 'review': {'approved': True, 'final_answer': 'Riders who leave an item in an Ola cab can report it from the trip details page within 24 hours of the ride.', 'reason': 'Reviewer found every sentence grounded.'}}
+{'trace_id': '15a972fa05944ba2a8be7877359e1c46', 'answer': 'Riders who leave an item in an Ola cab can report it from the trip details page within 24 hours of the ride.', 'grounded': True, 'sources': ['02_sla_by_severity', '09_feedback_collection', 'lost_and_found_policy'], 'ticket': None, 'guardrail': None, 'review': {'approved': True, 'final_answer': 'Riders who leave an item in an Ola cab can report it from the trip details page within 24 hours of the ride.', 'reason': 'Reviewer found every sentence grounded.'}}
 
 WS client A: sent a question, then disconnected abruptly before the reply arrived
 WS client B: What is the status of ticket OLA-0020?

@@ -12,3 +12,5 @@ autogen-core==0.7.5
 autogen-ext[openai]==0.7.5
 googleapis-common-protos==1.70.0
 protobuf==5.29.6
+google-genai==2.33.0
+python-dotenv==1.2.4

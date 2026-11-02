@@ -116,7 +116,8 @@ def _grounded_answer(query, strategy, k, threshold):
     if top < threshold:
         return {"answer": IDK, "grounded": False, "top_score": top, "sources": [], "context": hits}
     answer = llm.generate_grounded(query, [h["text"] for h in hits])
-    if not answer.strip():  # similar topic, but no retrieved sentence actually addresses the query
+    # similar topic, but nothing retrieved actually answers the query (mock: no overlap; real LLM: says so)
+    if not answer.strip() or answer.lower().startswith("i don't know"):
         return {"answer": IDK, "grounded": False, "top_score": top, "sources": [], "context": hits}
     return {
         "answer": answer,
