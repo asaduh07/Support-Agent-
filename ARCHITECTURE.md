@@ -61,7 +61,7 @@ don't appear in the retrieved context, and the editor removes those sentences (r
 **Grounded generation under mock.** Extractive: the answer is built from the top retrieved
 chunk sentences. If the top-1 cosine is below the calibrated threshold, it returns "I don't know".
 
-**Escalation score.** `w·escalated + (1−w)·(days_since_created/30)`, with `w` and the
+**Escalation score.** `w·escalated + (1−w)·(days_since_created/30)`. Older tickets score higher, because they are closer to breaching the SLA. `w` and the
 threshold chosen from the generated data's distribution. See README.
 
 **Least autonomy.** `check_support_ticket_status` is only attached to the Lookup Agent. On top
